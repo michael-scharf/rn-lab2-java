@@ -1,4 +1,4 @@
-# rn-2020ss-lab2-java
+# Repository lab2-java
 
 This repository contains the source code in Java for a client-server application that is used for teaching Internet protocols.
 
