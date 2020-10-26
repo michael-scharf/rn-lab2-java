@@ -52,9 +52,10 @@ public class SimpleServer {
         int length = 0;
         int iterations = 1;
         int delay = 0;
+	boolean prefix = false;
         boolean valid = false;
 
-        final Pattern pattern = Pattern.compile("GET\\s/(\\d+)(\\?(\\d+)(\\+(\\d+))?)?");
+        final Pattern pattern = Pattern.compile("GET\\s/(\\d+)(\\?(\\d+)(\\+(\\d+))?)?(\\s+(HTTP/1.\\d)$)?");
         final Matcher matcher = pattern.matcher(request);
         if (matcher.find()) {
           if (matcher.group(1) != null)
@@ -66,6 +67,13 @@ public class SimpleServer {
 
           if (length > 0 && length <= RESPONSE_LEN && iterations > 0 && delay >= 0) {
             valid = true;
+
+            if (matcher.group(7) != null) {
+              if (matcher.group(7).equals("HTTP/1.0"))
+                prefix = true;
+              else if (matcher.group(7).equals("HTTP/1.1"))
+                prefix = true;
+             }
           } else {
             iterations = 1;
             delay = 0;
@@ -77,7 +85,7 @@ public class SimpleServer {
 
         for (int i = 0; i < iterations; i++) {
           if (valid)
-            response = createResponse(length, (i == 0) ? true : false);
+            response = createResponse(length, (i == 0) ? prefix : false);
 
           outWriter.print(response);
           outWriter.flush();
