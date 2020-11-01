@@ -52,7 +52,7 @@ public class SimpleServer {
         int length = 0;
         int iterations = 1;
         int delay = 0;
-	boolean prefix = false;
+        boolean prefix = false;
         boolean valid = false;
 
         final Pattern pattern = Pattern.compile("GET\\s/(\\d+)(\\?(\\d+)(\\+(\\d+))?)?(\\s+(HTTP/1.\\d)$)?");
@@ -73,7 +73,7 @@ public class SimpleServer {
                 prefix = true;
               else if (matcher.group(7).equals("HTTP/1.1"))
                 prefix = true;
-             }
+            }
           } else {
             iterations = 1;
             delay = 0;
@@ -90,7 +90,7 @@ public class SimpleServer {
           outWriter.print(response);
           outWriter.flush();
 
-          if ((delay > 0) && (i < (iterations - 1)))
+          if (delay > 0)
             Thread.sleep(delay);
         }
       } catch (final Exception e) {
