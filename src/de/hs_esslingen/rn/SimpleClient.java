@@ -4,16 +4,28 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.net.InetSocketAddress;
 
 public class SimpleClient {
   private static final String HOST_NAME = "localhost";
   private static final int PORT_NUMBER = 80;
 
+  private static final int SOCKET_OPTION_SO_RCVBUF = (1460 * 0);
+
   public static void main(final String[] args) {
-    try (Socket simpleSocket = new Socket(HOST_NAME, PORT_NUMBER);
-        PrintWriter outWriter = new PrintWriter(simpleSocket.getOutputStream(), true);
-        BufferedReader inReader = new BufferedReader(new InputStreamReader(simpleSocket.getInputStream()));
-        BufferedReader stdInput = new BufferedReader(new InputStreamReader(System.in));) {
+    try {
+      Socket simpleSocket = new Socket();
+
+      if (SOCKET_OPTION_SO_RCVBUF > 0) {
+        simpleSocket.setReceiveBufferSize(SOCKET_OPTION_SO_RCVBUF);
+      };
+
+      simpleSocket.connect(new InetSocketAddress(HOST_NAME, PORT_NUMBER));
+
+      PrintWriter outWriter = new PrintWriter(simpleSocket.getOutputStream(), true);
+      BufferedReader inReader = new BufferedReader(new InputStreamReader(simpleSocket.getInputStream()));
+      BufferedReader stdInput = new BufferedReader(new InputStreamReader(System.in));
+
       System.out.println("--- Enter request in format GET /param ...---");
       String requestLine = "GET /";
       System.out.print(requestLine);

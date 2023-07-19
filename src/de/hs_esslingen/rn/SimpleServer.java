@@ -10,7 +10,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class SimpleServer {
-  private static final int PORT_NUMBER = 32001;
+  private static final int PORT_NUMBER = 50000;
 
   private static final String RESPONSE_PREFIX = "HTTP/1.0 200 OK\r\nServer: Rechnernetze SimpleServer\r\nContent-type: text/plain\r\n\r\n";
 
@@ -20,7 +20,7 @@ public class SimpleServer {
   private static final int RESPONSE_MARK = 10;
   private static final int RESPONSE_ALIGN = 13;
 
-  private static final int KEEPALIVE_TIME = 1000;
+  private static final int CLOSEWAIT_TIME = 1000;
 
   public static void main(final String[] args) {
     new SimpleServer();
@@ -54,10 +54,11 @@ public class SimpleServer {
         int length = 0;
         int iterations = 1;
         int delay = 0;
+        int tcp_nodelay = 0;
         boolean prefix = false;
         boolean valid = false;
 
-        final Pattern pattern = Pattern.compile("GET\\s/(\\d+)(\\?(\\d+)(\\+(\\d+))?)?(\\s+(HTTP/1.\\d)$)?");
+        final Pattern pattern = Pattern.compile("GET\\s/(\\d+)(\\?(\\d+)(\\+(\\d+)(#(\\d+))?)?)?(\\s+(HTTP/1.\\d)$)?");
         final Matcher matcher = pattern.matcher(request);
         if (matcher.find()) {
           if (matcher.group(1) != null)
@@ -66,14 +67,16 @@ public class SimpleServer {
             iterations = Integer.parseInt(matcher.group(3));
           if (matcher.group(5) != null)
             delay = Integer.parseInt(matcher.group(5));
+          if (matcher.group(7) != null)
+            tcp_nodelay = Integer.parseInt(matcher.group(7));
 
-          if (length > 0 && length <= RESPONSE_LEN && iterations > 0 && delay >= 0) {
+          if (length > 0 && length <= RESPONSE_LEN && iterations > 0 && delay >= 0 && tcp_nodelay >= 0) {
             valid = true;
 
-            if (matcher.group(7) != null) {
-              if (matcher.group(7).equals("HTTP/1.0"))
+            if (matcher.group(9) != null) {
+              if (matcher.group(9).equals("HTTP/1.0"))
                 prefix = true;
-              else if (matcher.group(7).equals("HTTP/1.1"))
+              else if (matcher.group(9).equals("HTTP/1.1"))
                 prefix = true;
             }
           } else {
@@ -83,6 +86,10 @@ public class SimpleServer {
           }
         } else {
           response = "HTTP/1.0 400 Bad request\r\n\r\nInvalid syntax\r\n";
+        }
+
+        if (tcp_nodelay > 0) {
+          clientSocket.setTcpNoDelay(true);
         }
 
         for (int i = 0; i < iterations; i++) {
@@ -95,7 +102,7 @@ public class SimpleServer {
           if (delay > 0)
             Thread.sleep(delay);
         }
-        Thread.sleep(KEEPALIVE_TIME);
+        Thread.sleep(CLOSEWAIT_TIME);
       } catch (final Exception e) {
         System.err.println("Server thread exception: " + e);
       }
